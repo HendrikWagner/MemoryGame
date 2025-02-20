@@ -7,27 +7,26 @@ import os
 from memory import initialize_game, is_match, reveal_card, hide_cards
 
 def run_gui():
+    # SPIEL-FENSTER ERSTELLEN
+    root = tk.Tk()
+    root.title("Memory-Spiel")
+
     # SPIELGRÖSSE
     size = 4  # 4x4 Spielfeld
     board, revealed = initialize_game(size)
     remaining_pairs = (size * size) // 2
 
-    # GUI-FENSTER ERSTELLEN
-    root = tk.Tk()
-    root.title("Memory-Spiel")
-
     # ABSOLUTER PFAD ZUM BILDER-ORDNER
     base_path = os.getcwd()  # Holt das aktuelle Arbeitsverzeichnis
     image_folder = os.path.join(base_path, "assets/resized")  # Absolute Pfadangabe
 
-    # Rückseiten-Bild für verdeckte Karten
+    # Rückseiten-Bild für verdeckte Karten (150x150 Pixel)
     backside_image = ImageTk.PhotoImage(
         Image.open(os.path.join(image_folder, "back.jpeg")).resize((150, 150))
     )
 
     # Lade Frontbilder anhand der Nummern im Spielbrett
-    # Da board Werte von 1 bis remaining_pairs liefert und die Dateien von image0.jpeg bis image7.jpeg heißen,
-    # wird hier 1 von der Nummer abgezogen.
+    # Die Dateien heißen image0.jpeg bis image7.jpeg, daher wird 1 abgezogen.
     card_images = {}
     for num in range(1, remaining_pairs + 1):
         path = os.path.join(image_folder, f"image{num - 1}.jpeg")
@@ -35,24 +34,36 @@ def run_gui():
             Image.open(path).resize((150, 150))
         )
 
+    # --- Schieberegler für die Verzögerung ---
+    slider_frame = tk.Frame(root)
+    slider_frame.grid(row=0, column=0, columnspan=size, pady=10)
+    
+    delay_label = tk.Label(slider_frame, text="Verzögerung (ms):")
+    delay_label.pack(side=tk.LEFT, padx=(0, 5))
+    
+    delay_slider = tk.Scale(slider_frame, from_=500, to=3000, orient=tk.HORIZONTAL)
+    delay_slider.set(1000)
+    delay_slider.pack(side=tk.LEFT)
+
+    # --- Spielfeld-Frame ---
+    board_frame = tk.Frame(root)
+    board_frame.grid(row=1, column=0, columnspan=size)
+
     # SPIEL-LOGIK in der GUI
     buttons = []
     selected = []
 
     def on_click(x, y):
         nonlocal selected, remaining_pairs
-        # Verhindere Klicks auf bereits aufgedeckte Karten oder wenn schon zwei Karten ausgewählt wurden
         if revealed[x][y] or len(selected) == 2:
             return
 
-        # Karte aufdecken
         reveal_card(revealed, x, y)
-        # Bild basierend auf der Nummer im board laden
         buttons[x][y].config(image=card_images[board[x][y]])
         selected.append((x, y))
 
         if len(selected) == 2:
-            root.after(1000, check_match)  # Nach 1 Sekunde prüfen
+            root.after(delay_slider.get(), check_match)
 
     def check_match():
         nonlocal selected, remaining_pairs
@@ -60,25 +71,40 @@ def run_gui():
         x2, y2 = selected[1]
 
         if is_match(board, x1, y1, x2, y2):
-            # Korrektes Paar – dauerhaft aufgedeckt lassen
             remaining_pairs -= 1
             if remaining_pairs == 0:
-                messagebox.showinfo("Gewonnen!", "Du hast alle Paare gefunden!")
+                if messagebox.askyesno("Glückwunsch!", "Du hast alle Paare gefunden!\nMöchtest du nochmal spielen?"):
+                    reset_game()
         else:
-            # Falsches Paar – wieder verdecken
             hide_cards(revealed, x1, y1, x2, y2)
             buttons[x1][y1].config(image=backside_image)
             buttons[x2][y2].config(image=backside_image)
 
-        selected.clear()  # Auswahl zurücksetzen
+        selected.clear()
+
+    def reset_game():
+        nonlocal board, revealed, remaining_pairs, selected
+        board, revealed = initialize_game(size)
+        remaining_pairs = (size * size) // 2
+        selected.clear()
+        for i in range(size):
+            for j in range(size):
+                buttons[i][j].config(image=backside_image)
 
     # Erstelle das Button-Gitter für das Spielfeld
     for i in range(size):
-        row = []
+        row_buttons = []
         for j in range(size):
-            btn = tk.Button(root, image=backside_image, command=lambda i=i, j=j: on_click(i, j))
+            btn = tk.Button(board_frame, image=backside_image, command=lambda i=i, j=j: on_click(i, j))
             btn.grid(row=i, column=j, padx=5, pady=5)
-            row.append(btn)
-        buttons.append(row)
+            row_buttons.append(btn)
+        buttons.append(row_buttons)
+
+    # Begrüßungsnachricht anzeigen, sobald das Fenster initialisiert und sichtbar ist
+    def show_welcome():
+        messagebox.showinfo("Willkommen", "Liebe Inge! Viel Spaß beim Spielen. Dein Hendrik")
+    
+    # Warte 100ms, damit das Fenster vollständig aufgebaut ist, und zeige dann die Nachricht
+    root.after(100, show_welcome)
 
     root.mainloop()
