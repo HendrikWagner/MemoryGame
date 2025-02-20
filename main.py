@@ -1,5 +1,7 @@
 from memory import initialize_game, is_match, reveal_card, hide_cards
 from ui import print_board, get_coordinates
+from ui_gui import run_gui
+
 
 def play_game(size=4):
     """Memory-Spiel starten"""
@@ -31,5 +33,8 @@ def play_game(size=4):
         
     print("Glückwunsch! Du hast alle Paare gefunden!")
 
-if __name__ == "__main__":
-    play_game()
+#if __name__ == "__main__":
+#    play_game()
+
+if __name__ == '__main__':
+    run_gui()
