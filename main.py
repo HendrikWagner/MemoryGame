@@ -1,6 +1,7 @@
 from memory import initialize_game, is_match, reveal_card, hide_cards
 from ui import print_board, get_coordinates
 from ui_gui import run_gui
+from ui_gui_kivy import run_gui_kivy
 
 
 def play_game(size=4):
@@ -36,5 +37,8 @@ def play_game(size=4):
 #if __name__ == "__main__":
 #    play_game()
 
+# if __name__ == '__main__':
+#     run_gui()
+
 if __name__ == '__main__':
-    run_gui()
+         run_gui_kivy()
