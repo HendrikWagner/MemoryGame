@@ -5,6 +5,16 @@ from tkinter import messagebox
 from PIL import Image, ImageTk
 import os
 from memory import initialize_game, is_match, reveal_card, hide_cards
+import sys, os
+
+def resource_path(relative_path):
+    """Gibt den absoluten Pfad zu einer Ressource zurück, auch wenn sie in einer PyInstaller-Exe gepackt wurde."""
+    try:
+        # PyInstaller erstellt einen temporären Ordner und speichert den Pfad in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.getcwd()
+    return os.path.join(base_path, relative_path)
 
 def run_gui():
     # SPIEL-FENSTER ERSTELLEN
@@ -17,8 +27,10 @@ def run_gui():
     remaining_pairs = (size * size) // 2
 
     # ABSOLUTER PFAD ZUM BILDER-ORDNER
-    base_path = os.getcwd()  # Holt das aktuelle Arbeitsverzeichnis
-    image_folder = os.path.join(base_path, "assets/resized")  # Absolute Pfadangabe
+    # base_path = os.getcwd()  # Holt das aktuelle Arbeitsverzeichnis
+    # image_folder = os.path.join(base_path, "assets/resized")  # Absolute Pfadangabe
+    image_folder = resource_path("assets/resized")
+
 
     # Rückseiten-Bild für verdeckte Karten (150x150 Pixel)
     backside_image = ImageTk.PhotoImage(
