@@ -1,6 +1,6 @@
 from memory import initialize_game, is_match, reveal_card, hide_cards
 from ui import print_board, get_coordinates
-from ui_gui import run_gui
+#from ui_gui import run_gui
 from ui_gui_kivy import run_gui_kivy
 
 
