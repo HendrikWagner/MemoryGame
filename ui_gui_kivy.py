@@ -172,29 +172,22 @@ class MemoryApp(App):
         # Sperrt temporär Eingaben, wenn gerade 2 Karten offen sind und wir auf Verzögerung warten
         self.locked = False
 
-        # Spiellogik initialisieren (Board generieren)
-        #self.reset_game_logic()
-        
         # Oberstes Layout: vertikale Anordnung (Spielfeld oben, Schieberegler unten)
         root = BoxLayout(orientation="vertical")
 
         # Das Spielfeld-Widget, soll den verbleibenden Platz (size_hint=(1,1)) einnehmen
-        self.game_board_widget = GameBoardWidget(app=self, size_hint=(1, 1))
-        Clock.schedule_once(lambda dt: self.game_board_widget.update_grid_size(), 0.1)
+        self.game_board_widget = GameBoardWidget(app=self, size_hint=(1, 1))        
         root.add_widget(self.game_board_widget)
 
-        # Unten ein Layout für den Schieberegler (feste Höhe)
+        # Verzögerungsslider (falls benötigt)
         slider_container = BoxLayout(orientation="horizontal", size_hint_y=None, height=SLIDER_HEIGHT, padding=10)
-        #self.slider_label = Label(text=f"Verzögerung: {self.delay_time:.1f}s", size_hint_x=0.3, font_size='16sp')
         self.delay_slider = Slider(min=SLIDER_MIN, max=SLIDER_MAX, value=self.delay_time, step=0.1)
         self.delay_slider.bind(value=self.on_slider_value_changed)
-
-        #slider_container.add_widget(self.slider_label)
         slider_container.add_widget(self.delay_slider)
         root.add_widget(slider_container)
 
-        # Zeige ein Willkommens-Popup nach kurzer Verzögerung
-        #Clock.schedule_once(lambda dt: self.show_welcome_popup(), 0.5)
+        # Spielfeld SOFORT richtig skalieren
+        Clock.schedule_once(lambda dt: self.game_board_widget.update_grid_size(), 0.1)
 
         # Spiellogik initialisieren (Board generieren)        
         self.reset_game()
