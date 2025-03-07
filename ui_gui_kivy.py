@@ -180,11 +180,12 @@ class MemoryApp(App):
 
         # Das Spielfeld-Widget, soll den verbleibenden Platz (size_hint=(1,1)) einnehmen
         self.game_board_widget = GameBoardWidget(app=self, size_hint=(1, 1))
+        Clock.schedule_once(lambda dt: self.game_board_widget.update_grid_size(), 0.1)
         root.add_widget(self.game_board_widget)
 
         # Unten ein Layout für den Schieberegler (feste Höhe)
         slider_container = BoxLayout(orientation="horizontal", size_hint_y=None, height=SLIDER_HEIGHT, padding=10)
-        self.slider_label = Label(text=f"Verzögerung: {self.delay_time:.1f}s", size_hint_x=0.3)
+        self.slider_label = Label(text=f"Verzögerung: {self.delay_time:.1f}s", size_hint_x=0.3, font_size='16sp')
         self.delay_slider = Slider(min=SLIDER_MIN, max=SLIDER_MAX, value=self.delay_time, step=0.1)
         self.delay_slider.bind(value=self.on_slider_value_changed)
 
@@ -262,6 +263,17 @@ class MemoryApp(App):
             content=Label(text="Liebe Inge! Viele Spaß beim Spielen. Dein Hendrik"),
             size_hint=(0.8, 0.5)
         )
+
+        label = Label(
+            text="Liebe Inge! Viel Spaß beim Spielen. Dein Hendrik",
+            size_hint_x=None,  # Damit sich die Breite nicht automatisch anpasst
+            width=300,  # Begrenzte Breite für Zeilenumbruch
+            text_size=(300, None),  # Erzwingt Umbruch, wenn der Text länger ist
+            halign="center"  # Zentriert den Text horizontal
+        )
+
+        popup.content = label
+
         # Schließen bei beliebigem Klick ins Popup
         popup.bind(on_touch_down=lambda inst, touch: popup.dismiss())
         popup.open()
@@ -269,27 +281,21 @@ class MemoryApp(App):
     def show_game_complete_popup(self):
         """
         Zeigt ein Popup an, wenn alle Paare gefunden wurden.
-        Fragt, ob man noch einmal spielen will.
+        Der Benutzer muss "OK" drücken, um neu zu starten.
         """
         content = BoxLayout(orientation='vertical', spacing=10)
-        content.add_widget(Label(text="Noch einmal spielen?"))
+        content.add_widget(Label(text=" Glückwunsch! Du hast alle Paare gefunden! "))
 
-        btn_layout = BoxLayout(orientation='horizontal', spacing=10, size_hint_y=None, height=40)
-        btn_yes = Button(text="Ja")
-        btn_no = Button(text="Nein")
-        btn_layout.add_widget(btn_yes)
-        btn_layout.add_widget(btn_no)
-
-        content.add_widget(btn_layout)
+        btn_ok = Button(text="OK", size_hint_y=None, height=40)
+        content.add_widget(btn_ok)
 
         popup = Popup(title="Glückwunsch", content=content, size_hint=(0.8, 0.5))
 
-        # Bei Klick auf "Ja" -> Spiel neustarten
-        btn_yes.bind(on_release=lambda x: self.restart_game(popup))
-        # Bei Klick auf "Nein" -> Popup schließen
-        btn_no.bind(on_release=lambda x: popup.dismiss())
+        # OK-Button schließt das Popup und startet das Spiel direkt neu
+        btn_ok.bind(on_release=lambda x: (popup.dismiss(), self.reset_game()))
 
         popup.open()
+
 
     def reset_game(self):
         # 1) Logik neu erzeugen
