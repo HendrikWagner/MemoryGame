@@ -185,16 +185,16 @@ class MemoryApp(App):
 
         # Unten ein Layout für den Schieberegler (feste Höhe)
         slider_container = BoxLayout(orientation="horizontal", size_hint_y=None, height=SLIDER_HEIGHT, padding=10)
-        self.slider_label = Label(text=f"Verzögerung: {self.delay_time:.1f}s", size_hint_x=0.3, font_size='16sp')
+        #self.slider_label = Label(text=f"Verzögerung: {self.delay_time:.1f}s", size_hint_x=0.3, font_size='16sp')
         self.delay_slider = Slider(min=SLIDER_MIN, max=SLIDER_MAX, value=self.delay_time, step=0.1)
         self.delay_slider.bind(value=self.on_slider_value_changed)
 
-        slider_container.add_widget(self.slider_label)
+        #slider_container.add_widget(self.slider_label)
         slider_container.add_widget(self.delay_slider)
         root.add_widget(slider_container)
 
         # Zeige ein Willkommens-Popup nach kurzer Verzögerung
-        Clock.schedule_once(lambda dt: self.show_welcome_popup(), 0.5)
+        #Clock.schedule_once(lambda dt: self.show_welcome_popup(), 0.5)
 
         # Spiellogik initialisieren (Board generieren)        
         self.reset_game()
@@ -206,7 +206,7 @@ class MemoryApp(App):
         Wird aufgerufen, wenn sich der Wert des Schiebereglers ändert.
         """
         self.delay_time = value
-        self.slider_label.text = f"Verzögerung: {value:.1f}s"
+        #self.slider_label.text = f"Verzögerung: {value:.1f}s"
 
     def on_card_pressed(self, card):
         """
@@ -284,7 +284,7 @@ class MemoryApp(App):
         Der Benutzer muss "OK" drücken, um neu zu starten.
         """
         content = BoxLayout(orientation='vertical', spacing=10)
-        content.add_widget(Label(text=" Glückwunsch! Du hast alle Paare gefunden! "))
+        content.add_widget(Label(text=" Du hast alle Paare gefunden! "))
 
         btn_ok = Button(text="OK", size_hint_y=None, height=40)
         content.add_widget(btn_ok)
