@@ -94,7 +94,7 @@ class MemoryApp(App):
         Erzwingt eine Neuberechnung der Spielfeldgröße und löst ein Resize-Event aus,
         um sicherzustellen, dass die Spielfläche korrekt dargestellt wird.
         """
-        #print("Erzwinge Neuzeichnung des Spielfelds...")
+        print("Erzwinge Neuzeichnung des Spielfelds...")
         self.game_board_widget.update_grid_size()
         Window.dispatch('on_resize', *Window.size)  # Löst eine Neuzeichnung des Fensters aus
 
