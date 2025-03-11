@@ -95,29 +95,28 @@ class MemoryApp(App):
         # 1. Aktuelle Größe speichern
         w, h = Window.size
 
-        # 2. Spielfeld entfernen und nach 0.1 Sekunden wieder hinzufügen
+        # 2. Spielfeld entfernen und wieder hinzufügen (Hard Reset)
         parent = self.game_board_widget.parent
         if parent:
             parent.remove_widget(self.game_board_widget)
             Clock.schedule_once(lambda dt: parent.add_widget(self.game_board_widget), 0.1)
 
-        print("Nach Punkt2")    
+        # 3. Explizite Größe setzen (erzwungene Breite/Höhe)
+        Clock.schedule_once(lambda dt: setattr(self.game_board_widget.grid, 'size_hint', (None, None)), 0.15)
+        Clock.schedule_once(lambda dt: setattr(self.game_board_widget.grid, 'size', (w * 0.8, w * 0.8)), 0.17)
 
-        # 3. Minimale Größenänderung, um Kivy weiter zu zwingen, das Layout zu aktualisieren
+        # 4. Positionierung nochmal explizit setzen
+        Clock.schedule_once(lambda dt: setattr(self.game_board_widget.grid, 'pos_hint', {'center_x': 0.5, 'center_y': 0.5}), 0.18)
+
+        # 5. Minimale Größenänderung, um Kivy weiter zu zwingen, das Layout zu aktualisieren
         Window.size = (w + 1, h + 1)
-        Clock.schedule_once(lambda dt: setattr(Window, 'size', (w, h)), 0.15)
+        Clock.schedule_once(lambda dt: setattr(Window, 'size', (w, h)), 0.2)
 
-        print("Nach Punkt3")    
+        # 6. Manuelles Resize-Event senden
+        Clock.schedule_once(lambda dt: Window.dispatch('on_resize', *Window.size), 0.3)
 
-        # 4. Manuelles Resize-Event senden
-        Clock.schedule_once(lambda dt: Window.dispatch('on_resize', *Window.size), 0.2)
-
-        print("Nach Punkt4")    
-
-        # 5. Letztes Backup: update_grid_size() erneut aufrufen
-        Clock.schedule_once(lambda dt: self.game_board_widget.update_grid_size(), 0.3)
-
-        print("Nach Punkt5")    
+        # 7. Letztes Backup: update_grid_size() erneut aufrufen
+        Clock.schedule_once(lambda dt: self.game_board_widget.update_grid_size(), 0.35)
 
 
 
