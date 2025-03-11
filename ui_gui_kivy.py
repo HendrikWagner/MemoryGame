@@ -90,13 +90,16 @@ class MemoryApp(App):
         return root
 
     def force_refresh(self):
-        """
-        Erzwingt eine Neuberechnung der Spielfeldgröße und löst ein Resize-Event aus,
-        um sicherzustellen, dass die Spielfläche korrekt dargestellt wird.
-        """
-        print("Erzwinge Neuzeichnung des Spielfelds...")
+        print("🟢 Erzwinge Neuzeichnung des Spielfelds... (force_refresh aufgerufen)")
+        
+        # Manuelles Setzen der Fenstergröße, um das Resize-Event auszulösen
+        Window.size = (Window.size[0] + 1, Window.size[1])  # +1 Pixel in der Breite
+        Window.size = (Window.size[0] - 1, Window.size[1])  # Zurück auf die Originalgröße
+        
+        # Erzwinge Neuzeichnung
         self.game_board_widget.update_grid_size()
         Window.dispatch('on_resize', *Window.size)  # Löst eine Neuzeichnung des Fensters aus
+
 
     def on_slider_value_changed(self, instance, value):
         self.delay_time = value
