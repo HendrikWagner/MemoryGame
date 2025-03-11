@@ -89,17 +89,22 @@ class MemoryApp(App):
         self.reset_game()
         return root
 
-    def force_refresh(self):
+     def force_refresh(self):
         print("🟢 Erzwinge Neuzeichnung des Spielfelds... (force_refresh aufgerufen)")
 
-        # Simuliere ein Resize, aber mit Verzögerung, damit das UI Zeit zum Initialisieren hat
-        def delayed_resize(dt):
-            Window.size = (Window.size[0] + 1, Window.size[1])  # +1 Pixel Breite
-            Window.size = (Window.size[0] - 1, Window.size[1])  # Wieder normal
-            Window.dispatch('on_resize', *Window.size)  # Manuelles Resize-Event triggern
+        # 1. Aktuelle Größe speichern
+        w, h = Window.size
 
-        # Warte 0.5 Sekunden nach Start, um sicherzugehen, dass Kivy initialisiert ist
-        Clock.schedule_once(delayed_resize, 0.5)
+        # 2. Winzige Größenänderung, um das Re-Layout zu triggern
+        Window.size = (w + 1, h + 1)
+        Clock.schedule_once(lambda dt: setattr(Window, 'size', (w, h)), 0.1)
+
+        # 3. Manuelles Triggern eines Resize-Events
+        Clock.schedule_once(lambda dt: Window.dispatch('on_resize', *Window.size), 0.2)
+
+        # 4. Falls das noch nicht reicht, forcieren wir das Grid-Update etwas später erneut
+        Clock.schedule_once(lambda dt: self.game_board_widget.update_grid_size(), 0.3)
+
 
 
     def on_slider_value_changed(self, instance, value):
