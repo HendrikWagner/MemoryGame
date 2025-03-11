@@ -1,5 +1,6 @@
 import os
 from kivy.app import App
+from kivy.uix.screenmanager import ScreenManager, Screen, FadeTransition
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.button import Button
@@ -18,11 +19,15 @@ SLIDER_MIN = 0.5
 SLIDER_MAX = 3.0
 SLIDER_DEFAULT = 1.0
 
+# ----------------------------
+# CardButton: repräsentiert eine Karte
+# ----------------------------
 class CardButton(Button):
-    def __init__(self, row, col, app, **kwargs):
+    def __init__(self, row, col, screen, **kwargs):
         super().__init__(**kwargs)
-        self.row, self.col = row, col
-        self.app = app
+        self.row = row
+        self.col = col
+        self.screen = screen  # Referenz zum GameScreen für Event-Handling
         self.value = None
         self.revealed = False
         self.back_source = os.path.join(ASSET_PATH, "back.jpeg")
@@ -45,16 +50,21 @@ class CardButton(Button):
         self.background_normal = self.front_source if self.revealed else self.back_source
         self.background_down = self.background_normal
 
+# ----------------------------
+# GameBoardWidget: enthält das Spielfeld (GridLayout)
+# ----------------------------
 class GameBoardWidget(BoxLayout):
-    def __init__(self, app, **kwargs):
+    def __init__(self, screen, **kwargs):
         super().__init__(**kwargs)
-        self.app = app
+        self.screen = screen
+        # Wir setzen size_hint=(None,None) für das Grid, damit wir die Größe manuell steuern können
         self.grid = GridLayout(cols=GRID_SIZE, rows=GRID_SIZE, spacing=10, padding=10, size_hint=(None, None))
         self.add_widget(self.grid)
-        self.cards = [[CardButton(row=i, col=j, app=app) for j in range(GRID_SIZE)] for i in range(GRID_SIZE)]
+        self.cards = [[CardButton(row=i, col=j, screen=screen) for j in range(GRID_SIZE)]
+                      for i in range(GRID_SIZE)]
         for row in self.cards:
             for card in row:
-                card.bind(on_release=self.app.on_card_pressed)
+                card.bind(on_release=screen.on_card_pressed)
                 self.grid.add_widget(card)
         self.bind(size=self.update_grid_size)
 
@@ -63,48 +73,66 @@ class GameBoardWidget(BoxLayout):
         self.grid.size = (side, side)
         self.grid.pos_hint = {"center_x": 0.5, "center_y": 0.5}
 
-class MemoryApp(App):
-    def build(self):
-        screen_w, screen_h = Window.size
-        short_side = min(screen_w, screen_h) * 0.8
-        Window.size = (short_side, short_side + SLIDER_HEIGHT)
+# ----------------------------
+# SplashScreen: interner SplashScreen
+# ----------------------------
+class SplashScreen(Screen):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        layout = BoxLayout(orientation='vertical')
+        # Einfaches Label als Splash (kann durch ein Image ersetzt werden)
+        label = Label(text="Loading...", font_size='40sp')
+        layout.add_widget(label)
+        self.add_widget(layout)
 
+    def on_enter(self):
+        # Nach 1.5 Sekunden zum GameScreen wechseln
+        Clock.schedule_once(self.switch_to_game, 1.5)
+
+    def switch_to_game(self, dt):
+        self.manager.current = "game"
+
+# ----------------------------
+# GameScreen: Hier findet das eigentliche Spiel statt
+# ----------------------------
+class GameScreen(Screen):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.delay_time = SLIDER_DEFAULT
         self.selected_cards = []
         self.locked = False
+        self.board = None
 
-        root = BoxLayout(orientation="vertical")
-        self.game_board_widget = GameBoardWidget(app=self, size_hint=(1, 1))
-        root.add_widget(self.game_board_widget)
+        # Hauptlayout: vertikal, mit Spielfeld oben und Slider unten
+        self.layout = BoxLayout(orientation="vertical")
+        self.game_board_widget = GameBoardWidget(screen=self, size_hint=(1, 1))
+        self.layout.add_widget(self.game_board_widget)
 
-        slider_container = BoxLayout(orientation="horizontal", size_hint_y=None, height=SLIDER_HEIGHT, padding=10)
+        # Slider-Container
+        self.slider_container = BoxLayout(orientation="horizontal",
+                                          size_hint_y=None, height=SLIDER_HEIGHT, padding=10)
         self.delay_slider = Slider(min=SLIDER_MIN, max=SLIDER_MAX, value=self.delay_time, step=0.1)
         self.delay_slider.bind(value=self.on_slider_value_changed)
-        slider_container.add_widget(self.delay_slider)
-        root.add_widget(slider_container)
+        self.slider_container.add_widget(self.delay_slider)
+        self.layout.add_widget(self.slider_container)
 
-        Clock.schedule_once(lambda dt: self.game_board_widget.update_grid_size(), 0.1)
-        Clock.schedule_once(lambda dt: self.force_refresh(), 0.2)  # Erzwingt eine korrekte Skalierung nach Start
+        self.add_widget(self.layout)
 
-        self.reset_game()
-        return root
+        # Verzögert den Force-Refresh, um sicherzustellen, dass Kivy initialisiert ist
+        Clock.schedule_once(lambda dt: self.force_refresh(), 0.5)
+        # Starte das Spiel (reset_game) etwas später
+        Clock.schedule_once(lambda dt: self.reset_game(), 0.6)
 
     def force_refresh(self):
-        print("Erzwinge Neuzeichnung des Spielfelds... (force_refresh aufgerufen)")
+        print("🟢 GameScreen: Erzwinge Neuzeichnung des Spielfelds... (force_refresh aufgerufen)")
         w, h = Window.size
-        parent = self.game_board_widget.parent
-        if parent:
-            parent.remove_widget(self.game_board_widget)
-            Clock.schedule_once(lambda dt: parent.add_widget(self.game_board_widget), 0.1)
-        Clock.schedule_once(lambda dt: setattr(self.game_board_widget.grid, 'size_hint', (None, None)), 0.15)
-        Clock.schedule_once(lambda dt: setattr(self.game_board_widget.grid, 'size', (w * 0.8, w * 0.8)), 0.17)
-        Clock.schedule_once(lambda dt: setattr(self.game_board_widget.grid, 'pos_hint', {'center_x': 0.5, 'center_y': 0.5}), 0.18)
-        Clock.schedule_once(lambda dt: setattr(Window, 'size', (w + 1, h + 1)), 0.25)
-        Clock.schedule_once(lambda dt: setattr(Window, 'size', (w, h)), 0.3)
-        Clock.schedule_once(lambda dt: Window.dispatch('on_resize', *Window.size), 0.35)
-        Clock.schedule_once(lambda dt: self.game_board_widget.update_grid_size(), 0.4)
 
-
+        # Strategie: Explizite minimale Größenänderung und manuelles Auslösen des Resize-Events
+        Window.size = (w + 1, h + 1)
+        Clock.schedule_once(lambda dt: setattr(Window, 'size', (w, h)), 0.1)
+        Clock.schedule_once(lambda dt: Window.dispatch('on_resize', *Window.size), 0.2)
+        # Letzter Aufruf des Grid-Updates
+        Clock.schedule_once(lambda dt: self.game_board_widget.update_grid_size(), 0.3)
 
     def on_slider_value_changed(self, instance, value):
         self.delay_time = value
@@ -114,7 +142,6 @@ class MemoryApp(App):
             return
         card.reveal()
         self.selected_cards.append(card)
-
         if len(self.selected_cards) == 2:
             first, second = self.selected_cards
             if is_match(self.board, first.row, first.col, second.row, second.col):
@@ -128,7 +155,7 @@ class MemoryApp(App):
     def hide_selected_cards(self):
         for c in self.selected_cards:
             c.hide()
-        self.selected_cards = []
+        self.selected_cards.clear()
         self.locked = False
 
     def check_game_complete(self):
@@ -151,6 +178,17 @@ class MemoryApp(App):
                 card.hide()
         self.selected_cards.clear()
         self.locked = False
+
+# ----------------------------
+# MemoryApp: Haupt-App, die den ScreenManager nutzt
+# ----------------------------
+class MemoryApp(App):
+    def build(self):
+        sm = ScreenManager(transition=FadeTransition())
+        sm.add_widget(SplashScreen(name="splash"))
+        sm.add_widget(GameScreen(name="game"))
+        sm.current = "splash"
+        return sm
 
 def run_gui_kivy():
     MemoryApp().run()
