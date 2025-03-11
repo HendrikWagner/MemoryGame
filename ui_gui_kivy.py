@@ -84,8 +84,19 @@ class MemoryApp(App):
         root.add_widget(slider_container)
 
         Clock.schedule_once(lambda dt: self.game_board_widget.update_grid_size(), 0.1)
+        Clock.schedule_once(lambda dt: self.force_refresh(), 0.2)  # Erzwingt eine korrekte Skalierung nach Start
+
         self.reset_game()
         return root
+
+    def force_refresh(self):
+        """
+        Erzwingt eine Neuberechnung der Spielfeldgröße und löst ein Resize-Event aus,
+        um sicherzustellen, dass die Spielfläche korrekt dargestellt wird.
+        """
+        #print("Erzwinge Neuzeichnung des Spielfelds...")
+        self.game_board_widget.update_grid_size()
+        Window.dispatch('on_resize', *Window.size)  # Löst eine Neuzeichnung des Fensters aus
 
     def on_slider_value_changed(self, instance, value):
         self.delay_time = value
