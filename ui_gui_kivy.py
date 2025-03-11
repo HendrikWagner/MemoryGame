@@ -89,7 +89,7 @@ class MemoryApp(App):
         self.reset_game()
         return root
 
-     def force_refresh(self):
+    def force_refresh(self):
         print("🟢 Erzwinge Neuzeichnung des Spielfelds... (force_refresh aufgerufen)")
 
         # 1. Aktuelle Größe speichern
