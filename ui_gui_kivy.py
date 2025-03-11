@@ -90,33 +90,19 @@ class MemoryApp(App):
         return root
 
     def force_refresh(self):
-        print("🟢 Erzwinge Neuzeichnung des Spielfelds... (force_refresh aufgerufen)")
-
-        # 1. Aktuelle Größe speichern
+        print("Erzwinge Neuzeichnung des Spielfelds... (force_refresh aufgerufen)")
         w, h = Window.size
-
-        # 2. Spielfeld entfernen und wieder hinzufügen (Hard Reset)
         parent = self.game_board_widget.parent
         if parent:
             parent.remove_widget(self.game_board_widget)
             Clock.schedule_once(lambda dt: parent.add_widget(self.game_board_widget), 0.1)
-
-        # 3. Explizite Größe setzen (erzwungene Breite/Höhe)
         Clock.schedule_once(lambda dt: setattr(self.game_board_widget.grid, 'size_hint', (None, None)), 0.15)
         Clock.schedule_once(lambda dt: setattr(self.game_board_widget.grid, 'size', (w * 0.8, w * 0.8)), 0.17)
-
-        # 4. Positionierung nochmal explizit setzen
         Clock.schedule_once(lambda dt: setattr(self.game_board_widget.grid, 'pos_hint', {'center_x': 0.5, 'center_y': 0.5}), 0.18)
-
-        # 5. Minimale Größenänderung, um Kivy weiter zu zwingen, das Layout zu aktualisieren
-        Window.size = (w + 1, h + 1)
-        Clock.schedule_once(lambda dt: setattr(Window, 'size', (w, h)), 0.2)
-
-        # 6. Manuelles Resize-Event senden
-        Clock.schedule_once(lambda dt: Window.dispatch('on_resize', *Window.size), 0.3)
-
-        # 7. Letztes Backup: update_grid_size() erneut aufrufen
-        Clock.schedule_once(lambda dt: self.game_board_widget.update_grid_size(), 0.35)
+        Clock.schedule_once(lambda dt: setattr(Window, 'size', (w + 1, h + 1)), 0.25)
+        Clock.schedule_once(lambda dt: setattr(Window, 'size', (w, h)), 0.3)
+        Clock.schedule_once(lambda dt: Window.dispatch('on_resize', *Window.size), 0.35)
+        Clock.schedule_once(lambda dt: self.game_board_widget.update_grid_size(), 0.4)
 
 
 
