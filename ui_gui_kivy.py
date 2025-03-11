@@ -1,5 +1,6 @@
 import os
 from kivy.app import App
+from kivy.uix.image import Image
 from kivy.uix.screenmanager import ScreenManager, Screen, FadeTransition
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
@@ -80,18 +81,20 @@ class SplashScreen(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         layout = BoxLayout(orientation='vertical')
-        # Einfaches Label als Splash (kann durch ein Image ersetzt werden)
-        label = Label(text="Loading...", font_size='40sp')
-        layout.add_widget(label)
+        # Verwende eine höhere Auflösung, wenn vorhanden oder sorge für das Stretching
+        splash_img = Image(
+            source=os.path.join("assets", "resized", "back.jpeg"),
+            size_hint=(1, 1),
+            allow_stretch=True,
+            keep_ratio=True  # oder False, falls das Bild genau den Bildschirm füllen soll
+        )
+        layout.add_widget(splash_img)
         self.add_widget(layout)
 
     def on_enter(self):
-        # Nach 1.5 Sekunden zum GameScreen wechseln
-        Clock.schedule_once(self.switch_to_game, 1.5)
-
-    def switch_to_game(self, dt):
-        self.manager.current = "game"
-
+        # Nach 1,5 Sekunden zum GameScreen wechseln
+        Clock.schedule_once(lambda dt: setattr(self.manager, 'current', 'game'), 1.5)
+        
 # ----------------------------
 # GameScreen: Hier findet das eigentliche Spiel statt
 # ----------------------------
